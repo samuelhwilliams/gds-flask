@@ -1,0 +1,19 @@
+[project]
+name = "gds-flask"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "flask-sqlalchemy-lite>=0.1.0",
+    "flask>=3.0.3",
+    "govuk-flask-admin",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ipdb>=0.13.13",
+]
+
+[tool.uv.sources]
+govuk-flask-admin = { path = "../govuk-flask-admin", editable = true }
