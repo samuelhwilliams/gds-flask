@@ -1,3 +1,4 @@
+import datetime
 import random
 import uuid
 from typing import Optional
@@ -6,10 +7,12 @@ from flask import Flask
 from flask_admin import Admin
 from flask_sqlalchemy_lite import SQLAlchemy
 from govuk_flask_admin import GovukFrontendV5_6Theme, GovukFlaskAdmin, GovukModelView
+from govuk_frontend_wtf.main import WTFormsHelpers
 from jinja2 import PackageLoader, ChoiceLoader, PrefixLoader
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, relationship
 from sqlalchemy.testing.schema import mapped_column
+from wtforms.validators import Email
 
 
 class Base(DeclarativeBase):
@@ -25,6 +28,7 @@ class User(Base):
     age: Mapped[int]
     job: Mapped[str]
     account: Mapped[Optional["Account"]] = relationship(back_populates="user")
+    created_at: Mapped[datetime.date]
 
 
 class Account(Base):
@@ -54,11 +58,16 @@ app.jinja_options = {
 app.config["SQLALCHEMY_ENGINES"] = {"default": "sqlite:///default.sqlite"}
 
 admin = Admin(app, theme=GovukFrontendV5_6Theme(), host="admin.foobar.localhost:5000")
-govuk_flask_admin = GovukFlaskAdmin(app)
+govuk_flask_admin = GovukFlaskAdmin(app, service_name="GDS Flask Admin")
+WTFormsHelpers(app)
 
 
 class UserModelView(GovukModelView):
     page_size = 10
+
+    form_args = {"email": {"validators": [Email()]}}
+
+    column_filters = ["age", "job"]
 
 
 db = SQLAlchemy(app)
@@ -69,6 +78,7 @@ with app.app_context():
     for _ in range(num_to_create):
         u = User(
             email=f"{uuid.uuid4()}@blah.com",
+            created_at=datetime.date.today(),
             name=str(uuid.uuid4()),
             age=random.randint(18, 100),
             job="blah blah",
@@ -80,5 +90,5 @@ with app.app_context():
 
     db.session.commit()
 
-    admin.add_view(UserModelView(User, db.session))
-    admin.add_view(GovukModelView(Account, db.session))
+    admin.add_view(UserModelView(User, db.session, category="Models"))
+    admin.add_view(GovukModelView(Account, db.session, category="Models"))
