@@ -3,6 +3,7 @@ import random
 import uuid
 from typing import Optional
 
+import faker
 from flask import Flask
 from flask_admin import Admin
 from flask_sqlalchemy_lite import SQLAlchemy
@@ -39,7 +40,7 @@ class Account(Base):
     user: Mapped[User] = relationship(back_populates="account")
 
 
-app = Flask(__name__, host_matching=True, static_host="static.foobar.localhost:5000")
+app = Flask(__name__)
 app.config["SECRET_KEY"] = "oh-no-its-a-secret"
 app.config["EXPLAIN_TEMPLATE_LOADING"] = True
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -57,13 +58,13 @@ app.jinja_options = {
 
 app.config["SQLALCHEMY_ENGINES"] = {"default": "sqlite:///default.sqlite"}
 
-admin = Admin(app, theme=GovukFrontendV5_6Theme(), host="admin.foobar.localhost:5000")
+admin = Admin(app, theme=GovukFrontendV5_6Theme())
 govuk_flask_admin = GovukFlaskAdmin(app, service_name="GDS Flask Admin")
 WTFormsHelpers(app)
 
 
 class UserModelView(GovukModelView):
-    page_size = 10
+    page_size = 15
 
     form_args = {"email": {"validators": [Email()]}}
 
@@ -77,9 +78,9 @@ with app.app_context():
     num_to_create = 8
     for _ in range(num_to_create):
         u = User(
-            email=f"{uuid.uuid4()}@blah.com",
+            email=faker.Faker().email(),
             created_at=datetime.date.today(),
-            name=str(uuid.uuid4()),
+            name=faker.Faker().name(),
             age=random.randint(18, 100),
             job="blah blah",
         )
